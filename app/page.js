@@ -1,103 +1,120 @@
-import Image from "next/image";
+"use client";
+import SearchBar from "./components/searchbar";
+import { useEffect, useState } from "react";
+import fetchCards from "./components/cards";
+import api from "./lib/queryBuilder";
+import axios from "axios";
+export default function HomePage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [cards, setCards] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-export default function Home() {
+  //display 10 cards on 1 page and change each search or page change
+
+  useEffect(() => {
+    if (searchTerm.length > 1) {
+      fetchCards(searchTerm, page, 20).then(({ cards, totalCount }) => {
+        setCards(cards);
+        setTotalPages(Math.ceil(totalCount / 20));
+      });
+    } else {
+      setCards([]);
+      setPage(1);
+      setTotalPages(1);
+    }
+  }, [searchTerm, page]);
+
+  //reset the page to 1 when the search term changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
+
+  const handleNextPage = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main
+      className="min-h-screen bg-cover bg-center"
+      style={{ backgroundImage: "url('/images/latias.jpg')" }}
+    >
+      <h1 className="font-extrabold p-4 text-center text-yellow-300 shadow-blue-700 text-6xl text-shadow-blue-900 text-shadow-lg">
+        Pokémon TCG Display
+      </h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <div className="flex items-center justify-between mt-10 mb-4 px-4">
+        <div className="w-1/3" />
+        <div className="w-1/3 flex justify-center">
+          <SearchBar onSearch={setSearchTerm} />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        <div className="w-1/3 flex justify-end text-slate-900">
+          Page {page} of {totalPages}
+        </div>
+      </div>
+
+      <div className="text-center font-semibold text-slate-900 mb-4 pt-7">
+        <p>
+          Hint exact match searching only. Spelling matters {" ("}Ex. Pikachu
+          {")"}
+        </p>
+        <p>However you can:</p>
+        <p>
+          {
+            '1) Search for any card that starts with "Pi" use " * " afterwards (Ex. "Pi*")'
+          }
+        </p>
+        <p>
+          {
+            '2) Search for any card that starts with "Pi" and ends with "o" (Ex. "Pi*o")'
+          }
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
+        {cards.map((card) => (
+          <div key={card.id}>
+            <p className="mb-2 text-yellow-300 bg-slate-700 rounded-lg text-center font-bold text-2xl">
+              {card.name}
+            </p>
+            <img
+              src={card.images.large}
+              className="w-full duration-300 hover:scale-125"
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="flex justify-center items-center mt-4 mb-4 ">
+        <button
+          className={`p-2 m-2 rounded-lg  bg-blue-700  w-1/12 border-2 border-black ${
+            page === 1 ? "opacity-50 cursor-not-allowed" : " hover:bg-blue-500"
+          }`}
+          onClick={handlePrevPage}
+          disabled={page === 1}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          Previous
+        </button>
+        <button
+          className={`p-2 m-2 rounded-lg bg-blue-700 w-1/12 border-2 border-black ${
+            page === totalPages
+              ? "opacity-50 cursor-not-allowed"
+              : " hover:bg-blue-500"
+          }`}
+          onClick={handleNextPage}
+          disabled={page === totalPages}
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          Next
+        </button>
+      </div>
+    </main>
   );
 }
