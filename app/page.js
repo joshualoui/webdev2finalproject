@@ -33,12 +33,14 @@ export default function HomePage() {
   const handleNextPage = () => {
     if (page < totalPages) {
       setPage(page + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   const handlePrevPage = () => {
     if (page > 1) {
       setPage(page - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
